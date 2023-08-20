@@ -4,6 +4,7 @@ import os
 import datetime
 import argparse
 import hashlib
+import ehfsum_exception as ehfsumerr
 
 INVALID_PATH = "Invalid file path/name. Path %s does not exist."
 SUPPORTED_ALGORITHMS = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]  # Add more algorithms here
@@ -28,8 +29,12 @@ def validate_path(path):
         quit()
 
 def validate_chunk_size(chunk_size):
-    if chunk_size < 0 and isinstance(chunk_size, int):
-        print("Invalid! Chunk size must be a positive number.")
+    try:
+        if chunk_size < 0:
+            raise ehfsumerr.InvalidChunkSize(chunk_size)
+        return chunk_size
+    except ehfsumerr.InvalidChunkSize as e:
+        print("Invalid chunk size! Please enter a non-negative integer:", e)
         quit()
 
 def valid_path(path):
@@ -37,7 +42,6 @@ def valid_path(path):
 
 def hash(args):
     validate_path(args.hash[0])
-    validate_chunk_size(args.chunk)
     for algorithm in SUPPORTED_ALGORITHMS:
         hasher = hashlib.new(algorithm)
 
@@ -53,14 +57,13 @@ def hash(args):
 
         if args.save is not None:
             save_hash(ALGO, HEXDIGEST, args.hash[0])
-        else:
-            save_hash(ALGO, HEXDIGEST, args.hash[0])
-    if args.meta is None:
+    
+    if args.meta is not None:
         metadata(args.hash[0])
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="hfsum",
+        prog="ehfsum",
         description=("An Enhanced File Digest Generator."),
         epilog=("Hit Me Up @https://github.com/binaryassasins")
     )
@@ -70,34 +73,36 @@ def main():
                         nargs=1, 
                         metavar="absolute file path", 
                         default=None, 
-                        help="get the hash value of specified path.")
+                        help="get the hash value of specified path. (required)")
     # Custom chunk size
     parser.add_argument("-c", "--chunk", 
                         type=int,
                         nargs='?',  
                         metavar="chunk size", 
                         default=1024, 
-                        help="how many chunks to be processed at a time.")
+                        help="file chunks to be processed at a time. (optional)")
     # Save the hash
     parser.add_argument("-s", "--save", 
                         type=str, 
                         nargs='?', 
                         metavar="hash path", 
-                        default=os.getcwd(), 
-                        help="save file hashes at the specified path.")
-
+                        const="hash.txt",
+                        default=None, 
+                        help="save file hashes at the specified path. (optional)")
     # Generate MetaData
-    default_meta_path = ""
     parser.add_argument("-m", "--meta", 
                         type=str,
                         nargs='?',
-                        metavar="meta path", 
-                        default=default_meta_path,  
-                        help="save file metadata.")
+                        metavar="meta path",
+                        const="metadata.txt", 
+                        default=None,  
+                        help="save file metadata. (optional)")
     
     args = parser.parse_args()
 
     if args.hash is not None:
+        if args.chunk is not None:
+            args.chunk = validate_chunk_size(args.chunk)
         hash(args)
     else:
         print("Invalid! Please specify a file.")
