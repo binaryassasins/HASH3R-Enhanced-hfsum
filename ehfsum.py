@@ -5,18 +5,36 @@ import datetime
 import argparse
 import hashlib
 import ehfsum_exception as ehfsumerr
+import stat
+import itertools
+from tabulate import tabulate
 
 INVALID_PATH = "Invalid file path/name. Path %s does not exist."
-SUPPORTED_ALGORITHMS = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]  # Add more algorithms here
+SUPPORTED_ALGORITHMS = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
 
 def metadata(path):
     created_timestamp = os.path.getctime(path)
     created_datetime = datetime.datetime.fromtimestamp(created_timestamp)
+    file_stat = os.stat(path)
+
+    file_verbose = {
+        "Absolute Path": os.path.abspath(path),
+        "File Extension": os.path.splitext(path)[1],
+        "File Created": created_datetime,
+        "File Size": file_stat.st_size,
+        "File Permissions": stat.filemode(file_stat.st_mode), 
+    }
+
+    tee_output = itertools.tee(file_verbose.items(), 2) 
+
     with open('metadata.txt', 'a') as meta:
-        print(f"Absolute File Path: {os.path.abspath(path)}", file=meta)
-        print(f"File Type: {os.path.splitext(path)[1]}", file=meta)
-        print(f"File Created: {created_datetime}\n", file=meta)
+        for key, value in tee_output[0]:
+            print(f"{key}: {value}", file=meta)
     meta.close()
+
+    print("\n")
+    for key, value in tee_output[1]:
+        print(f"{key}: {value}")
 
 def save_hash(algorithm, digest, path):
     with open('hash.txt', 'a') as h:
@@ -42,6 +60,7 @@ def valid_path(path):
 
 def hash(args):
     validate_path(args.hash[0])
+    hash_table = []
     for algorithm in SUPPORTED_ALGORITHMS:
         hasher = hashlib.new(algorithm)
 
@@ -53,12 +72,14 @@ def hash(args):
                 hasher.update(chunk)
         ALGO = algorithm.upper()
         HEXDIGEST = hasher.hexdigest()
-        print(f"\n{ALGO}: {HEXDIGEST}", end='')
+        hash_table.append([ALGO, HEXDIGEST])
 
         if args.save is not None:
             save_hash(ALGO, HEXDIGEST, args.hash[0])
     
-    if args.meta is not None:
+    print(tabulate(hash_table, headers=["Algorithm", "Hash Value"], tablefmt="pretty"))
+
+    if args.verbose_meta is not None:
         metadata(args.hash[0])
 
 def main():
@@ -71,7 +92,7 @@ def main():
     parser.add_argument("-hf", "--hash", 
                         type=str, 
                         nargs=1, 
-                        metavar="absolute file path", 
+                        metavar="path", 
                         default=None, 
                         help="get the hash value of specified path. (required)")
     # Custom chunk size
@@ -80,20 +101,20 @@ def main():
                         nargs='?',  
                         metavar="chunk size", 
                         default=1024, 
-                        help="file chunks to be processed at a time. (optional)")
+                        help="explicit number of chunks to be processed. (optional)")
     # Save the hash
     parser.add_argument("-s", "--save", 
                         type=str, 
                         nargs='?', 
-                        metavar="hash path", 
+                        metavar="path", 
                         const="hash.txt",
                         default=None, 
                         help="save file hashes at the specified path. (optional)")
-    # Generate MetaData
-    parser.add_argument("-m", "--meta", 
+    # Save MetaData
+    parser.add_argument("-vm", "--verbose_meta", 
                         type=str,
                         nargs='?',
-                        metavar="meta path",
+                        metavar="path",
                         const="metadata.txt", 
                         default=None,  
                         help="save file metadata. (optional)")
