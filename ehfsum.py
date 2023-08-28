@@ -1,5 +1,5 @@
 # Enhanced version of hfsum (support Windows OS, Mac OS, Linux OS)
-# todo: create customizable chunk size (default: 1024), create report generation (digest, file type, product version, product name, copyright, file location, file permissions, date and time the file was downloaded), build using pyinstaller (support multi os platform), use try-except to sanitize input
+# todo: build using pyinstaller (support multi os platform), use try-except to sanitize input
 import os
 import datetime
 import argparse
