@@ -77,7 +77,7 @@ def hash(args):
         if args.save is not None:
             save_hash(ALGO, HEXDIGEST, args.hash[0])
     
-    print(tabulate(hash_table, headers=["Algorithm", "Hash Value"], tablefmt="pretty"))
+    print(tabulate(hash_table, headers=["Algorithm", "Hash Value"], tablefmt="roundedgrid", stralign="grid"))
 
     if args.verbose_meta is not None:
         metadata(args.hash[0])
