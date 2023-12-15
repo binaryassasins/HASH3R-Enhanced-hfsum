@@ -5,4 +5,4 @@
 3. Use `git clone https://github.com/binaryassasins/HASH3R-Enhanced-hfsum.git`
 4. Navigate to hfsum folder by using `cd ehfsum` to change the directory
 5. Use `.\ehfsum -h` to see the manual
-6. To retrieve the hash value of a file, you can use `.\ehfsum -hf <file_name>` or `.\hfsum --hash <file_name>` within the ehfsum directory
+6. To retrieve the hash value of a file, you can use `.\ehfsum -hf <file_name>` or `.\ehfsum --hash <file_name>` within the ehfsum directory
