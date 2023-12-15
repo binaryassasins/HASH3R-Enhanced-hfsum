@@ -10,7 +10,7 @@ import itertools
 from tabulate import tabulate
 
 INVALID_PATH = "Invalid file path/name. Path %s does not exist."
-SUPPORTED_ALGORITHMS = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
+SUPPORTED_ALGORITHMS = ["sha3_224", "sha3_256", "sha3_384", "sha3_512", "blake2b", "blake2s"]
 
 def metadata(path):
     created_timestamp = os.path.getctime(path)
